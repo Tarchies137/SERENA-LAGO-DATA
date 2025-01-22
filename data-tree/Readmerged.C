@@ -67,6 +67,10 @@ void Readmerged::Init(TTree *tree)
    LAGOmu->Branch("Q0", &Q0, "Q0/F");
    LAGOmu->Branch("Q1", &Q1, "Q1/F");
    LAGOmu->Branch("Q2", &Q2, "Q2/F");
+   LAGOmu->Branch("VP1", &VP1, "VP1/F");
+   LAGOmu->Branch("VP2", &VP1, "VP2/F");
+   LAGOmu->Branch("STDP1", &STDP1, "STDP1/F"); 
+   LAGOmu->Branch("STDP2", &STDP2, "STDP2/F"); 
    LAGOmu->Branch("V_Min0", &V_Min0, "V_Min0/F");
    LAGOmu->Branch("V_Min1", &V_Min1, "V_Min1/F");
    LAGOmu->Branch("V_Min2", &V_Min2, "V_Min2/F");
@@ -102,6 +106,8 @@ void Readmerged::Loop()
       	//
       	Float_t sR0=0,sR1=0,sR2=0;
 	Float_t t0_min,v0_min=1000,t1_min,v1_min=1000,t2_min,v2_min=1000;
+	Float_t vp1=0, vp2=0, v2p1=0, v2p2 =0, V2P1, V2P2;	
+	Int_t np1=0, np2=0;
 
       	for (Int_t j = 0; j < kNsample; j++) {
         	nb = fChain->GetEntry(j + jentry*kNsample);   nbytes += nb;   
@@ -109,32 +115,57 @@ void Readmerged::Loop()
             	vv0[j] = v0;
             	vv1[j] = v1;
             	vv2[j] = v2;
+            	            
+            if (WPi<t && t<WPf)
+            {
+            	vp1 += v1;
+            	v2p1 += v1*v1;
+            	v2p2 += v2*v2;
+            	np1++;
+            	vp2 += v2;
+            	np2++;
+            }
             
+            if (t>Wi && t<Wf)
+            {
+            	sR0 += v0;// equivale a sR = sR+vv[k];
+            	sR1 += v1;
+            	sR2 += v2;
+      
             	//Minimo ...  Incluir como nueva rama
-		if (v0<v0_min && t>Wi && t<Wf)
+		if (v0<v0_min)// Arreglar 
 		{
 			v0_min = v0;
 			t0_min = t;
-			      	sR0 += v0;// equivale a sR = sR+vv[k];
-            	
+			      
 		}
-		if (v1<v1_min && t>Wi && t<Wf)
+		if (v1<v1_min )
 		{
 			v1_min = v1;
 			t1_min = t;
-		sR1 += v1;
+		
             	
 		}
-		if (v2<v2_min && t>Wi && t<Wf)
+		if (v2<v2_min )
 		{
 			v2_min = v2;
 			t2_min = t;
-			sR2 += v2;
-      
+			
+		}
 		}
 		
 		}
-		//carga total clectada
+	//	PEDESTAL
+	//pedestal de v1,v2	
+	VP1 = vp1/np1;
+	VP2 = vp2/np2;
+	//prom voltajes cuadrado
+	V2P1 = v2p1/np1;
+	V2P2 = v2p2/np2;
+	// desviacion estandart Pedestal
+	STDP1=sqrt(V2P1-VP1*VP1);
+	STDP2=sqrt(V2P2-VP2*VP2);
+	//carga total clectada
 	Float_t dt = (tt[kNsample-1]-tt[0])/(kNsample - 1);
 	/*Q[0] = (Float_t)sR0*dt/R;
 	Q[1] = (Float_t)sR1*dt/R;
@@ -143,8 +174,8 @@ void Readmerged::Loop()
 	//Carga integrada 
 
 	Q0 = sR0*dt/R;
-	Q1 = sR1*dt/R;
-	Q2 = sR2*dt/R;
+	Q1 = (sR1*dt-VP1*(Wf-Wi))/R;
+	Q2 = (sR2*dt-VP2*(Wf-Wi))/R;
 	//Voltaje minimo
 	V_Min0 = v0_min;
 	V_Min1 = v1_min;

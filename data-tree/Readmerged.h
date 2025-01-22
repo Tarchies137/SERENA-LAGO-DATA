@@ -20,6 +20,8 @@ public:
    Float_t R = 50;                    // Resistencia 50 [Ohm].
    Float_t Wi =0.02e-6;
    Float_t Wf =0.08e-6;			// Ventana de integracion de eventos
+   Float_t WPi = 0.01e-6;
+   Float_t WPf = 0.02e-6;
    Int_t ev;
    Float_t evn;
    Float_t evn_time;
@@ -29,6 +31,8 @@ public:
    Float_t v2;
    Float_t tt[kNsample], vv0[kNsample], vv1[kNsample], vv2[kNsample];
    Float_t Q0, Q1, Q2;
+   Float_t VP1, VP2;
+   Float_t STDP1, STDP2;
    Float_t V_Min0, V_Min1, V_Min2;
    Float_t T_Min0, T_Min1, T_Min2;
 
